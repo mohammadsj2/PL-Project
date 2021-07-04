@@ -3,8 +3,8 @@
 
 Keivan Rezaei,
 
-	   Seyed Mohammad Seyed Javadi,
+Seyed Mohammad Seyed Javadi,
 
-	  Mohammad Omidvar
+Mohammad Omidvar
 
 
