@@ -1,4 +1,8 @@
 #lang racket
+;(provide (all-defined-out))
+(provide simple-math-lexer)
+(provide simple-math-parser)
+
 (require (lib "eopl.ss" "eopl"))
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)
@@ -348,7 +352,7 @@
             )))
 
 ;test
-(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1+2;")))
-(let ((parser-res (simple-math-parser my-lexer))) parser-res)
+;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+;(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1+2;")))
+;(let ((parser-res (simple-math-parser my-lexer))) parser-res)
 
