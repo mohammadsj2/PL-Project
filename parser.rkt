@@ -1,8 +1,7 @@
 #lang racket
-;(provide (all-defined-out))
+(provide (all-defined-out))
 (provide simple-math-lexer)
 (provide simple-math-parser)
-
 (require (lib "eopl.ss" "eopl"))
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)

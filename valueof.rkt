@@ -1,5 +1,6 @@
 #lang racket
 (require (file "parser.rkt"))
+(require (lib "eopl.ss" "eopl"))
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
 (define my-lexer (lex-this simple-math-lexer (open-input-string "a=1+2;")))
 (let ((parser-res (simple-math-parser my-lexer))) parser-res)
@@ -27,23 +28,38 @@
 
 (define-datatype expval expval?
   (num-val (num number?))
-  (bool-val (bool bool?))
+  (bool-val (bool boolean?))
   (list-val (list list?))
   (non-val)
 )
+
+(define (expval->bool e)
+  (cases expval e
+    (bool-val (b) b)
+    (else 'error-in-expval->bool)))
+
+(define (expval->num e)
+  (cases expval e
+    (num-val (n) n)
+    (else 'error-in-expval->num)))
+
+(define (expval->list e)
+  (cases expval e
+    (list-val (l) l)
+    (else 'error-in-expval->list)))
 
 (define-datatype environment environment?
   (empty-env)
   (extend-env
    (var string?)
-   (val expval?)
+   (val refrence?)
    (env environment?))
 )
 
 (define (apply-env env search-var)
   (cases environment env
     (empty-env () 'not-found)
-    (extend-env (var, val, env2) (if (equal? var search-var) val (apply-env env2 search-var)))))
+    (extend-env (var val env2) (if (equal? var search-var) val (apply-env env2 search-var)))))
 
 (define (value-of-exp exp env)
   (cases expression exp
@@ -52,18 +68,18 @@
 (define (value-of-disj disj env)
   (cases disjunction disj
     (a-conjunction (conjunction1) (value-of-conj conjunction1 env))
-    (multiple-conjunctions (disj, conj) (let ([val1 (expval->bool (value-of-disj disj env))]     ;TODO inja age env taghir kone masalan too ye tabei hame chi avaz mishe
-                                              [val2 (expval->bool (value-of-conj conj env))]
+    (multiple-conjunctions (disj conj) (let ([val1 (expval->bool (value-of-disj disj env))]
+                                              [val2 (expval->bool (value-of-conj conj env))])
                                               (bool-val (or val1 val2))
-                                            )))))
+                                            ))))
 
 (define (value-of-conj conj env)
   (cases conjunction conj
     (an-inversion (inv) (value-of-inv inv env))
-    (multiple-inversions (conj,inv) (let ([val1 (expval->bool (value-of-conj conj env))]     ;TODO inja age env taghir kone masalan too ye tabei hame chi avaz mishe
-                                          [val2 (expval->bool (value-of-inv inv env))]
+    (multiple-inversions (conj inv) (let ([val1 (expval->bool (value-of-conj conj env))]   
+                                          [val2 (expval->bool (value-of-inv inv env))])
                                           (bool-val (and val1 val2))
-                                       )))))
+                                       ))))
 
 (define (value-of-inv inv env)
   (cases inversion inv
@@ -74,24 +90,26 @@
 (define (value-of-comp comp env)
   (cases comparison comp
     (a-sum (sm) (value-of-sum sm env))
-    (a-sum-compare (sm, comp-op-sm-ps) 0))) ;;TODO ino nemifahmam aslan bayad chi khorooji bede
+    (a-sum-compare (sm comp-op-sm-ps)
+                   0
+                   ))) ;TODO ino nemifahmam aslan bayad chi khorooji bede
 
 (define (value-of-sum sm env)
   (cases sum sm
-    (plus-sum (s, t) (let ([val1 (expval->num (value-of-sum s env))]
+    (plus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
                            [val2 (expval->num (value-of-term t env))])
                        (num-val (+ val1 val2))))
-    (minus-sum (s, t) (let ([val1 (expval->num (value-of-sum s env))]
+    (minus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
                            [val2 (expval->num (value-of-term t env))])
                        (num-val (- val1 val2))))
     (a-term (t) (value-of-term t env))))
 
 (define (value-of-term t env)
   (cases term t
-    (mul-term (t, f) (let ([val1 (expval->num (value-of-term t env))]
+    (mul-term (t f) (let ([val1 (expval->num (value-of-term t env))]
                            [val2 (expval->num (value-of-factor f env))])
                        (num-val (* val1 val2))))
-    (div-term (t, f) (let ([val1 (expval->num (value-of-term t env))]
+    (div-term (t f) (let ([val1 (expval->num (value-of-term t env))]
                            [val2 (expval->num (value-of-factor f env))])
                        (num-val (/ val1 val2))))
     (a-factor (f) (value-of-factor f env))))
@@ -105,7 +123,7 @@
 
 (define (value-of-power p env)
   (cases power p
-    (a-power (a, f) (let ([val1 (expval->num (value-of-atom a env))]
+    (a-power (a f) (let ([val1 (expval->num (value-of-atom a env))]
                           [val2 (expval->num (value-of-factor f env))])
                       (num-val (expt val1 val2))))
     (a-primary (p) (value-of-primary p env))))
@@ -115,14 +133,15 @@
     (an-atom (a) (value-of-atom a env))
     (an-array-ref (p2 exp) (let ([l (expval->list (value-of-primary p2 env))]
                                  [ref (expval->num (value-of-exp exp env))])
-                             (deref (list-ref l ref))))) 
+                             (deref (list-ref l ref))))
+    (else 0))
     ;TODO baghie chizash baraye tabe
 )
 
 
 (define (value-of-atom a env)
   (cases atom a
-    (an-id (id) (deref (apply-env env id))));TODO in kollan fk konam tabe biad kharab mishe bekhatere inke env global taghir mikone too tabe
+    (an-id (id) (deref (apply-env env id)))
     (true-value () (bool-val #t))
     (false-value () (bool-val #f))
     (none-value () (non-val))
@@ -130,17 +149,17 @@
     (a-list (pl) (value-of-plist pl env))))
 
 (define (import-list-to-store l)
-  (for/list ([x in l]) (newref x)))
+  (for/list ([x l]) (newref x)))
 
 (define (value-of-plist pl env)
   (cases plist pl
     (empty-list () (expval->list '()))
     (non-empty-list (exps) (expval->list (import-list-to-store (value-of-exps exps env))))))
 
-(define (value-of-exps exps env) ;khoroojish ye list mamoolie ke javabe exps ha tooshe
+(define (value-of-exps exps env) ;khoroojish ye list mamoolie ke javabe exp ha tooshe
   (cases expressions exps
     (only-expression (exp) (list (value-of-exp exp env)))
-    (multiple-expression (exps,exp) (let ([l (value-of-exps exps env)]
+    (multiple-expression (exps exp) (let ([l (value-of-exps exps env)]
                                           [val (value-of-exp exp env)])
                                       (append l (list val))))))
     
