@@ -93,7 +93,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a; if False: dd = 4444; else: dd=5555;;for dd in h:continue;dddd=50;;")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a; if False: dd = 4444; else: dd=5555;;for dd in h:break;dddd=50;;")))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))
