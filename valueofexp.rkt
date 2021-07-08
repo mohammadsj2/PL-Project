@@ -136,9 +136,13 @@
   
 (define (value-of-sum sm env)
   (cases sum sm
-    (plus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
-                          [val2 (expval->num (value-of-term t env))])
-                       (num-val (+ val1 val2))))
+    (plus-sum (s t) (let ([eval1 (value-of-sum s env)]
+                          [eval2 (value-of-term t env)])
+                      (cases expval eval1
+                        (num-val (val1) (num-val (+ val1 (expval->num eval2))))
+                        (bool-val (val1) (bool-val (or val1 (expval->bool eval2))))
+                        (list-val (val1) (list-val (append val1 (expval->list eval2))))
+                        (else 'error))))
     (minus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
                            [val2 (expval->num (value-of-term t env))])
                        (num-val (- val1 val2))))
@@ -146,9 +150,12 @@
 
 (define (value-of-term t env)
   (cases term t
-    (mul-term (t f) (let ([val1 (expval->num (value-of-term t env))]
-                           [val2 (expval->num (value-of-factor f env))])
-                       (num-val (* val1 val2))))
+    (mul-term (t f) (let ([eval1 (value-of-term t env)]
+                          [eval2 (value-of-factor f env)])
+                      (cases expval eval1
+                        (num-val (val1) (num-val (* val1 (expval->num eval2))))
+                        (bool-val (val1) (bool-val (and val1 (expval->bool eval2))))
+                        (else 'error))))
     (div-term (t f) (let ([val1 (expval->num (value-of-term t env))]
                            [val2 (expval->num (value-of-factor f env))])
                        (num-val (/ val1 val2))))

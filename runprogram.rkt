@@ -53,7 +53,7 @@
                [env3 (car out)]
                [break-flag (cadr out)]
                [return-flag (cadddr out)]
-               [return-val (caddddr out)])
+               [return-val (car (cddddr out))])
         (cond
           [return-flag (list env3 #f #f #t return-val)]
           [break-flag out]
@@ -89,11 +89,12 @@
 (define (run-assignment-stmt a env)
   (cases assignment a
     (an-assignment (id exp) (let ([val (value-of-exp exp env)])
-                              (set-var id val env)))))
+                              (list (set-var id val env) #f #f #f (non-val))))))
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=a<b or a>b;a=56;d=not c;a=[a,b,c,d];h=a[2];")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=True * False;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a;")))
+;TODO: ino yademoon bashe too farz ha benevisim ke list ro listi az refrence ha dar nazar gereftam yani lst1+lst1 ro age ozve avvalesh taghir bedim ozve (len lst) omesham taghir mikone
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))
