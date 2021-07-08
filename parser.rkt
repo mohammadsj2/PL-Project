@@ -143,9 +143,9 @@
   (false-value)
   (none-value)
   (a-number (number number?))
-  (a-list (list1 list?)))
+  (a-list (list1 plist?)))
 
-(define-datatype list list?
+(define-datatype plist plist?
   (empty-list)
   (non-empty-list (exps expressions?)))
 

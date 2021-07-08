@@ -5,14 +5,21 @@
 (let ((parser-res (simple-math-parser my-lexer))) parser-res)
 
 (define (empty-store) '())
+
 (define the-store (empty-store))
+
 (define (get-store) the-store)
+
 (define (initialize-store!) (set! the-store (empty-store)))
+
 (define (refrence? v) (integer? v))
+
 (define (newref v) (let ([len (length the-store)])
                      (set! the-store (append the-store (list v)))
                      len))
+
 (define (deref r) (list-ref the-store r))
+
 (define (setref r v)
   (set! the-store
         (for/list ([x the-store][i (range (length the-store))])
@@ -25,7 +32,18 @@
   (non-val)
 )
 
+(define-datatype environment environment?
+  (empty-env)
+  (extend-env
+   (var string?)
+   (val expval?)
+   (env environment?))
+)
 
+(define (apply-env env search-var)
+  (cases environment env
+    (empty-env () 'not-found)
+    (extend-env (var, val, env2) (if (equal? var search-var) val (apply-env env2 search-var)))))
 
 (define (value-of-exp exp env)
   (cases expression exp
@@ -95,16 +113,36 @@
 (define (value-of-primary p env)
   (cases primary p
     (an-atom (a) (value-of-atom a env))
-    ;TODO baghie chizash baraye list, tabe
-    ))
+    (an-array-ref (p2 exp) (let ([l (expval->list (value-of-primary p2 env))]
+                                 [ref (expval->num (value-of-exp exp env))])
+                             (deref (list-ref l ref))))) 
+    ;TODO baghie chizash baraye tabe
+)
 
 
 (define (value-of-atom a env)
   (cases atom a
-    (an-id (id) 0);TODO
+    (an-id (id) (deref (apply-env env id))));TODO in kollan fk konam tabe biad kharab mishe bekhatere inke env global taghir mikone too tabe
     (true-value () (bool-val #t))
     (false-value () (bool-val #f))
     (none-value () (non-val))
     (a-number (n) (num-val n))
-    (a-list (l) (list-val l))))
+    (a-list (pl) (value-of-plist pl env))))
+
+(define (import-list-to-store l)
+  (for/list ([x in l]) (newref x)))
+
+(define (value-of-plist pl env)
+  (cases plist pl
+    (empty-list () (expval->list '()))
+    (non-empty-list (exps) (expval->list (import-list-to-store (value-of-exps exps env))))))
+
+(define (value-of-exps exps env) ;khoroojish ye list mamoolie ke javabe exps ha tooshe
+  (cases expressions exps
+    (only-expression (exp) (list (value-of-exp exp env)))
+    (multiple-expression (exps,exp) (let ([l (value-of-exps exps env)]
+                                          [val (value-of-exp exp env)])
+                                      (append l (list val))))))
+    
+    
     
