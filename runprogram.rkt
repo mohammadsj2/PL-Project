@@ -93,7 +93,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=True * False;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a;")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a;")))
 ;TODO: ino yademoon bashe too farz ha benevisim ke list ro listi az refrence ha dar nazar gereftam yani lst1+lst1 ro age ozve avvalesh taghir bedim ozve (len lst) omesham taghir mikone
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
