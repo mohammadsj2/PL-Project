@@ -2,9 +2,7 @@
 (provide (all-defined-out))
 (require (file "parser.rkt"))
 (require (lib "eopl.ss" "eopl"))
-(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1+2;")))
-(let ((parser-res (simple-math-parser my-lexer))) parser-res)
+
 
 (define (empty-store) '())
 
@@ -18,14 +16,20 @@
 
 (define (newref v) (let ([len (length the-store)])
                      (set! the-store (append the-store (list v)))
+                     (debug (list 'newref len v))
                      len))
 
 (define (deref r) (list-ref the-store r))
 
+(define (debug l)
+  (displayln l))
+
 (define (setref r v)
+  (begin
+    (debug (list "setref" r v))
   (set! the-store
         (for/list ([x the-store][i (range (length the-store))])
-          (if (equal? i r) v x))))
+          (if (equal? i r) v x)))))
 
 (define-datatype expval expval?
   (num-val (num number?))
@@ -189,8 +193,8 @@
 
 (define (value-of-plist pl env)
   (cases plist pl
-    (empty-list () (expval->list '()))
-    (non-empty-list (exps) (expval->list (import-list-to-store (value-of-exps exps env))))))
+    (empty-list () (list-val '()))
+    (non-empty-list (exps) (list-val (import-list-to-store (value-of-exps exps env))))))
 
 (define (value-of-exps exps env) ;khoroojish ye list mamoolie ke javabe exp ha tooshe
   (cases expressions exps
