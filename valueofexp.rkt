@@ -22,7 +22,7 @@
 (define (deref r) (list-ref the-store r))
 
 (define (debug l)
-  (displayln l))
+  (displayln (cons 'debug: l)))
 
 (define (setref r v)
   (begin
