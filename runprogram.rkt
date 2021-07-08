@@ -65,7 +65,7 @@
 (define (run-if if-st env)
   (cases if-stmt if-st
     (an-if-stmt (exp stmts else-blk)
-                (let ([cond-bool (expval->bool (value-of-exp exp))])
+                (let ([cond-bool (expval->bool (value-of-exp exp env))])
                   (if cond-bool
                       (run-stmts stmts env)
                       (cases else-block else-blk
@@ -93,8 +93,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a;")))
-;TODO: ino yademoon bashe too farz ha benevisim ke list ro listi az refrence ha dar nazar gereftam yani lst1+lst1 ro age ozve avvalesh taghir bedim ozve (len lst) omesham taghir mikone
+(define my-lexer (lex-this simple-math-lexer (open-input-string "a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a; if False: dd = 4444; else: dd=5555;;for dd in h:continue;dddd=50;;")))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))

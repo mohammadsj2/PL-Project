@@ -205,7 +205,7 @@
 (define (value-of-plist pl env)
   (cases plist pl
     (empty-list () (list-val '()))
-    (non-empty-list (exps) (list-val (import-list-to-store (value-of-exps exps env))))))
+    (non-empty-list (exps) (list-val (value-of-exps exps env)))));(import-list-to-store (value-of-exps exps env))))))
 
 (define (value-of-exps exps env) ;khoroojish ye list mamoolie ke javabe exp ha tooshe
   (cases expressions exps
