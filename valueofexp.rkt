@@ -1,4 +1,5 @@
 #lang racket
+(provide (all-defined-out))
 (require (file "parser.rkt"))
 (require (lib "eopl.ss" "eopl"))
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
