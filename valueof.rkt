@@ -91,13 +91,48 @@
   (cases comparison comp
     (a-sum (sm) (value-of-sum sm env))
     (a-sum-compare (sm comp-op-sm-ps)
-                   0
-                   ))) ;TODO ino nemifahmam aslan bayad chi khorooji bede
+                   (letrec ([val1 (expval->num (value-of-sum sm env))]
+                            [l (get-comp-op-sm-p-list comp-op-sm-ps env)])
+                            (value-of-comp-op-sm-ps (cons val1 l) env))
+                   )))
 
+(define (get-comp-op-sm-p-list c env)
+  (cases compare-op-sum-pairs c
+    (a-compare-op-sum-pair (c) (list c))
+    (multiple-compare-op-sum-pair (c1s c2) (append (get-comp-op-sm-p-list c1s env) (list c2)))))
+
+(define (value-of-sum-of-comp-op comp env)
+  (cases compare-op-sum-pair comp
+    (an-eq-sum (eq) (cases eq-sum eq
+                      (new-eq-sum (s) (value-of-sum s env))))
+    (a-lt-sum (lt) (cases lt-sum lt
+                     (new-lt-sum (s) (value-of-sum s env))))
+    (a-gt-sum (gt) (cases gt-sum gt
+                     (new-gt-sum (s) (value-of-sum s env))))))
+
+(define (value-of-comp-op-sm-ps comp-op-list env)
+  (if (equal? (length comp-op-list) 1) (bool-val #t)
+  (let ([val1 (car comp-op-list)]
+        [val2 (expval->num (value-of-sum-of-comp-op (cadr comp-op-list) env))]
+        [comp (cadr comp-op-list)]
+        [l2 (cddr comp-op-list)])
+    (let ([lp (cons val2 l2)])
+      (cases compare-op-sum-pair comp
+        (an-eq-sum (eq) (if (equal? val1 val2)
+                            (value-of-comp-op-sm-ps lp env)
+                            (bool-val #f)))
+        (a-lt-sum (lt) (if (< val1 val2)
+                            (value-of-comp-op-sm-ps lp env)
+                            (bool-val #f)))
+        (a-gt-sum (gt) (if (> val1 val2)
+                            (value-of-comp-op-sm-ps lp env)
+                            (bool-val #f))))))))
+        
+  
 (define (value-of-sum sm env)
   (cases sum sm
     (plus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
-                           [val2 (expval->num (value-of-term t env))])
+                          [val2 (expval->num (value-of-term t env))])
                        (num-val (+ val1 val2))))
     (minus-sum (s t) (let ([val1 (expval->num (value-of-sum s env))]
                            [val2 (expval->num (value-of-term t env))])
