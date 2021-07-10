@@ -3,14 +3,14 @@
 (require (file "valueofexp.rkt"))
 (require (lib "eopl.ss" "eopl"))
 
+(struct result (new-env break-flag continue-flag return-flag return-val) #:transparent)
+
 (define (run-program p env)
   (cases program p
-      (a-program (stmts) (run-stmts stmts env))))
+    (a-program (stmts) (run-stmts stmts env))))
 
 (define (is-stop? out)
-  (or (cadr out) (caddr out) (cadddr out)))
-
-(define (out->env out) (car out))
+  (or (result-break-flag out) (result-continue-flag out) (result-return-flag out)))
 
 (define (run-stmts stmts env) ;output: (list new-env break-flag continue-flag return-flag return-val) 
   (cases statements stmts
@@ -18,7 +18,7 @@
     (multiple-statements (stmts2 stmt) (let ([out (run-stmts stmts2 env)])
                                          (if (is-stop? out)
                                              out
-                                             (run-stmt stmt (out->env out)))))))
+                                             (run-stmt stmt (result-new-env out)))))))
 
 (define (run-stmt stmt env)
   (cases statement stmt
@@ -46,18 +46,15 @@
                   (run-for-helper id l stmts env)))))
 
 (define (run-for-helper id l stmts env)
-  (if (null? l) (list env #f #f #f (non-val))
+  (if (null? l) (result env #f #f #f (non-val))
       (letrec ([env2 (set-var id (car l) env)]
                [lp (cdr l)]
                [out (run-stmts stmts env2)]
-               [env3 (car out)]
-               [break-flag (cadr out)]
-               [return-flag (cadddr out)]
-               [return-val (car (cddddr out))])
+               [env3 (result-new-env out)])
         (cond
-          [return-flag (list env3 #f #f #t return-val)]
-          [break-flag out]
-          [(null? lp) (list env3 #f #f #f (non-val))]
+          [(result-return-flag out) (result env3 #f #f #t (result-return-val out))]
+          [(result-break-flag out) out]
+          [(null? lp) (result env3 #f #f #f (non-val))]
           [else (run-for-helper id lp stmts env3)]))))
 ;TODO for ro intori zadam ke moteghayyere tooye for biroonesham hast! in ghalate? kollan bayad scope bandi raayat beshe?
 ;TODO too tabe oke scope esh jodae chon too ghesmate value-of-exp e seda zadanesh vali inja na
@@ -76,20 +73,20 @@
     (an-assignment-stmt (a) (run-assignment-stmt a env))
     (a-return-stmt (r) (run-return r env))
     (a-global-stmt (g) 0) ;TODO function phase
-    (pass-stmt () (list env #f #f #f (non-val)))
-    (break-stmt () (list env #t #f #f (non-val)))
-    (continue-stmt () (list env #f #t #f (non-val)))))
+    (pass-stmt () (result env #f #f #f (non-val)))
+    (break-stmt () (result env #t #f #f (non-val)))
+    (continue-stmt () (result env #f #t #f (non-val)))))
 
 
 (define (run-return r env)
   (cases return-stmt r
-    (a-return () (list env #f #f #t (non-val)))
-    (a-return-exp (exp) (list env #f #f #t (value-of-exp exp)))))
+    (a-return () (result env #f #f #t (non-val)))
+    (a-return-exp (exp) (result env #f #f #t (value-of-exp exp)))))
   
 (define (run-assignment-stmt a env)
   (cases assignment a
     (an-assignment (id exp) (let ([val (value-of-exp exp env)])
-                              (list (set-var id val env) #f #f #f (non-val))))))
+                              (result (set-var id val env) #f #f #f (non-val))))))
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
