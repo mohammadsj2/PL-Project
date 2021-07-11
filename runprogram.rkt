@@ -12,7 +12,7 @@
 (define (is-stop? out)
   (or (result-break-flag out) (result-continue-flag out) (result-return-flag out)))
 
-(define (run-stmts stmts env) ;output: (list new-env break-flag continue-flag return-flag return-val) 
+(define (run-stmts stmts env)
   (cases statements stmts
     (a-statement (stmt) (run-stmt stmt env))
     (multiple-statements (stmts2 stmt) (let ([out (run-stmts stmts2 env)])
@@ -27,9 +27,40 @@
 
 (define (run-compound-stmt c env)
   (cases compound-stmt c
-    (a-function-def (f) 0) ;TODO function phase
+    (a-function-def (f) (def-func f env))
     (a-compound-if-stmt (if-st) (run-if if-st env))
     (a-compound-for-stmt (for-st) (run-for for-st env))))
+
+(define (def-func func-def-st env)
+  (cases function-def func-def-st
+    (function-def-with-params (id params1 stmts)
+                              (create-procedure id (params->list params1) stmts env))
+    (function-def-no-params (id stmts)
+                            (create-procedure id `() stmts env))))
+
+(define (params->list func-params)
+  (cases params func-params
+    (single-param (param1) (list param1))
+    (multiple-params (params1 param1) (append (params->list params1) (list param1)))))
+
+(define (create-procedure id params1 stmts env)
+  (result (extend-env-with-procedure id params1 stmts env) #f #f #f (non-val)))
+
+(define (extend-env-with-procedure id params1 stmts env)
+  (extend-env-proc
+   id
+   (map params1 (lambda (p)
+                  (cases param-with-default p
+                    (a-param (id exp) id))))
+   stmts
+   (let extend-env-with-param-with-default ([params2 params1]
+                                            [saved-env env])
+     (cond
+       ((null? params2) saved-env)
+       (else (cases param-with-default (car params2)
+               (a-param (id exp)
+                        (let ([val (value-of-exp exp env)])
+                          (extend-env id (newref val) (extend-env-with-param-with-default (cdr params2) saved-env))))))))))
 
 (define (set-var var val env)
   (let ([ref (apply-env env var)])
