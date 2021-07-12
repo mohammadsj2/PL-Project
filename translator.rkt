@@ -213,8 +213,7 @@
     (a-no-param-function-call (primary1) (let ([proc (expval->proc (value-of-primary primary1 env))])
                                            (apply-procedure proc `())))
     (with-param-function-call (primary1 args1)(let ([proc (expval->proc (value-of-primary primary1 env))])
-                                                (apply-procedure proc (map value-of-exp (arguments->list args1)))))))
-
+                                                (apply-procedure proc (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1)))))))
 
 (define (arguments->list args1)
   (cases arguments args1
@@ -234,8 +233,8 @@
     (cond
       ((null? name-vals) saved-env)
       (else (let ([name (caar name-vals)]
-                  [val (cdar name-vals)])
-              (extend-env name val (extend-env-with-argument (cdr name-vals) saved-env)))))))
+                  [val (cadar name-vals)])
+              (extend-env name (newref val) (extend-env-with-argument (cdr name-vals) saved-env)))))))
 
 (define (value-of-atom a env)
   (cases atom a
@@ -410,7 +409,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(): return 2*3;; a = f();")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(x=3,y=4): return x*y+3;; a = f(5,2);")))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))
