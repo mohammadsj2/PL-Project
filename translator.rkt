@@ -308,7 +308,7 @@
     (multiple-params (params1 param1) (append (params->list params1) (list param1)))))
 
 (define (create-procedure id params1 stmts env)
-  (result (extend-env-with-procedure id params1 stmts env) #f #f #f (non-val)))
+  (result (extend-env-with-procedure-new id params1 stmts env) #f #f #f (non-val)))
 
 (define (extend-env-with-procedure id params1 stmts env)
   (extend-env-proc
@@ -327,6 +327,29 @@
                (a-param (id exp)
                         (let ([val (value-of-exp exp env)])
                           (extend-env id (newref val) (extend-env-with-param-with-default (cdr params2) saved-env))))))))))
+
+(define (extend-env-with-procedure-new id params1 stmts env)
+  (let ([func-var-ref (newref (non-val))])
+        
+    (let ([new-env (extend-env id func-var-ref env)])
+      (let ([proc (procedure
+                   (map
+                    (lambda (p)
+                      (cases param-with-default p
+                        (a-param (id exp) id)))
+                    params1)
+                   stmts
+                   (let extend-env-with-param-with-default ([params2 params1]
+                                                            [saved-env new-env])
+                     (cond
+                       ((null? params2) saved-env)
+                       (else (cases param-with-default (car params2)
+                               (a-param (id exp)
+                                        (let ([val (value-of-exp exp env)])
+                                          (extend-env id (newref val) (extend-env-with-param-with-default (cdr params2) saved-env)))))))))])
+        (begin
+          (setref func-var-ref (proc-val proc))
+          new-env)))))
 
 (define (set-var var val env)
   (let ([ref (apply-env env var)])
@@ -378,7 +401,7 @@
 (define (run-return r env)
   (cases return-stmt r
     (a-return () (result env #f #f #t (non-val)))
-    (a-return-exp (exp) (result env #f #f #t (value-of-exp exp)))))
+    (a-return-exp (exp) (result env #f #f #t (value-of-exp exp env)))))
   
 (define (run-assignment-stmt a env)
   (cases assignment a
@@ -387,7 +410,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(): return 2*3;; a=1-2*3;b=a**2;c=False * True;a=56;d=not c;a=[a,b,c,d]+[55,66];h=a+a; if False: dd = 4444; else: dd=5555;;for dd in h:break;dddd=50;; x = f();")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(): return 2*3;; a = f();")))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))
