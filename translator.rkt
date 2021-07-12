@@ -409,7 +409,7 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(x=3,y=4): return x*y+3;; a = f(5,2);")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(x=10): if x==1 or x==0: return 1; else: return f(x-1) + f(x-2);;; a = f();")))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))
