@@ -229,7 +229,7 @@
   (num-val (num) (display num))
   (bool-val (bool) (display bool))
   (list-val (list) (begin (display "[") (print-values list) (display "]")))
-  (proc-val (proc) (display "Procedure"))
+  (proc-val (proc) (display proc))
   (non-val (display "None"))
   )
   )
@@ -462,9 +462,9 @@
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
 ;If you want to run code directly
-;(define my-lexer (lex-this simple-math-lexer (open-input-string "def f():print(10);; a=10; print(f()); print(a, a, [a, a]); print([True]);")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f():print(10);; a=10; print(f()); print(a, a, [a, a]); print([True]);")))
 
-(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
-(let ((parser-res (simple-math-parser my-lexer)))
-  parser-res
-  (run-program parser-res (empty-env)))
+;(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
+;(let ((parser-res (simple-math-parser my-lexer)))
+;  parser-res
+;  (run-program parser-res (empty-env)))

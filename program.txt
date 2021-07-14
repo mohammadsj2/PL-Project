@@ -1,8 +1,10 @@
-a=10;
-b=20;
-c=a+b;
-print(c);
-def f(a=10, c=-10):
-    return a * c;
-;
-print(f(100, 100));
+def g(): return 1;;
+def f(x=10):
+if x==1 or x==0: return g();
+else: return f(x-1) + f(x-2);;;
+a = f(7);
+print(a);
+
+print(10<20>30);
+
+print(2**4 * 3 + 6 - 10);

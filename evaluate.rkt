@@ -15,3 +15,5 @@
       (run-program parser-res (empty-env)))
     )
   )
+
+(evaluate "program.txt")

@@ -394,7 +394,13 @@
     (a-global-stmt (g) 0) ;TODO function phase
     (pass-stmt () (result env #f #f #f (non-val)))
     (break-stmt () (result env #t #f #f (non-val)))
-    (continue-stmt () (result env #f #t #f (non-val)))))
+    (continue-stmt () (result env #f #t #f (non-val)))
+    (print-stmt
+     (args)
+     #f
+     )
+    )
+  )
 
 
 (define (run-return r env)
