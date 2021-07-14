@@ -1,8 +1,9 @@
 #lang racket
 (provide (all-defined-out))
+
 (require (file "parser.rkt"))
 (require (lib "eopl.ss" "eopl"))
-
+(require (file "file_reader.rkt"))
 
 ; Value of Expressions
 
@@ -24,7 +25,8 @@
 (define (deref r) (list-ref the-store r))
 
 (define (debug l)
-  (displayln (cons 'debug: l)))
+  ;(displayln (cons 'debug: l)))
+  #f)
 
 (define (setref r v)
   (begin
@@ -209,11 +211,51 @@
     (an-atom (a) (value-of-atom a env))
     (an-array-ref (p2 exp) (let ([l (expval->list (value-of-primary p2 env))]
                                  [ref (expval->num (value-of-exp exp env))])
-                             (deref (list-ref l ref))))
+                             (list-ref l ref)))
     (a-no-param-function-call (primary1) (let ([proc (expval->proc (value-of-primary primary1 env))])
                                            (apply-procedure proc `())))
-    (with-param-function-call (primary1 args1)(let ([proc (expval->proc (value-of-primary primary1 env))])
-                                                (apply-procedure proc (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1)))))))
+    (with-param-function-call (primary1 args1)(if (is-print primary1)
+                                                  (begin (print-values (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1)) ) (display "\n") (num-val -13))
+                                                  (let ([proc (expval->proc (value-of-primary primary1 env))])
+                                                    (apply-procedure proc (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1))))
+                                                  )
+      )
+                                               
+    )
+  )
+
+(define (print-value eval)
+  (cases expval eval
+  (num-val (num) (display num))
+  (bool-val (bool) (display bool))
+  (list-val (list) (begin (display "[") (print-values list) (display "]")))
+  (proc-val (proc) (display "Procedure"))
+  (non-val (display "None"))
+  )
+  )
+
+(define (print-values expvals )
+  (cond
+    ((null? expvals) (num-val -13))
+    (else
+     (begin
+       (print-value (car expvals))
+       (if (null? (cdr expvals)) (display "") (display " "))
+       (print-values (cdr expvals)))
+     )
+    )
+  )
+
+(define (is-print p)
+  (cases primary p
+     (an-atom (atom1)
+              (cases atom atom1
+                (an-id (id)
+                       (if (equal? id "print") #t #f))
+                (else
+                 #f
+                 )))
+     (else #f)))
 
 (define (arguments->list args1)
   (cases arguments args1
@@ -391,10 +433,20 @@
   (cases simple-stmt stmt
     (an-assignment-stmt (a) (run-assignment-stmt a env))
     (a-return-stmt (r) (run-return r env))
-    (a-global-stmt (g) 0) ;TODO function phase
+    (a-global-stmt (g) (result env #f #f #f (non-val))) ;TODO function phase
     (pass-stmt () (result env #f #f #f (non-val)))
     (break-stmt () (result env #t #f #f (non-val)))
-    (continue-stmt () (result env #f #t #f (non-val)))))
+    (continue-stmt () (result env #f #t #f (non-val)))
+    (print-stmt
+     (args)
+     (begin
+       (print-values (map (lambda (exp) (value-of-exp exp env)) (arguments->list args)))
+       (display "\n")
+       (result env #f #f #f (non-val))
+       )
+     )
+    )
+  )
 
 
 (define (run-return r env)
@@ -409,7 +461,10 @@
 
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def g(): return 1;; def f(x=10): if x==1 or x==0: return g(); else: return f(x-1) + f(x-2);;; a = f();")))
+;If you want to run code directly
+;(define my-lexer (lex-this simple-math-lexer (open-input-string "def f():print(10);; a=10; print(f()); print(a, a, [a, a]); print([True]);")))
+
+(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
 (let ((parser-res (simple-math-parser my-lexer)))
   parser-res
   (run-program parser-res (empty-env)))

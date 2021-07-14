@@ -1,4 +1,5 @@
 #lang racket
+(provide read-instructions-from-file)
 (define-namespace-anchor anc)
 (define ns (namespace-anchor->namespace anc))
 
@@ -16,4 +17,4 @@
   )
 
 
-(read-instructions-from-file "my_file.txt")
+;(read-instructions-from-file "program.txt")

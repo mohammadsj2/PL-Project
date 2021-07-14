@@ -24,7 +24,9 @@
   (a-global-stmt (global-stmt1 global-stmt?))
   (pass-stmt)
   (break-stmt)
-  (continue-stmt))
+  (continue-stmt)
+  (print-stmt (args arguments?))
+  )
 
 (define-datatype compound-stmt compound-stmt?
   (a-function-def (function-def1 function-def?))
@@ -159,7 +161,7 @@
 (define-tokens a (NUMBER ID))
 (define-empty-tokens b (EOF SEMI-COLON PLUS MINUS MUL DIVIDE COLON COMMA OPEN-PARENTHESIS CLOSE-PARENTHESIS
                             OPEN-BRACKET CLOSE-BRACKET ASSIGN LESS GREATER POWER EQUALITY TRUE FALSE
-                            NONE NOT AND OR IN FOR ELSE IF DEF GLOBAL RETURN CONTINUE BREAK PASS))
+                            NONE NOT AND OR IN FOR ELSE IF DEF GLOBAL RETURN CONTINUE BREAK PASS PRINT))
 
 
 (define simple-math-lexer
@@ -196,6 +198,7 @@
             ("continue" (token-CONTINUE))
             ("break" (token-BREAK))
             ("pass" (token-PASS))
+            ("print" (token-PRINT))
             ((:or (:+ (char-range #\0 #\9)) (:: (:+ (char-range #\0 #\9)) #\. (:+ (char-range #\0 #\9)))) (token-NUMBER (string->number lexeme)))
             ((:: (:+ (:or (char-range #\A #\Z) (char-range #\a #\z))) (:* (:or (char-range #\A #\Z) (char-range #\a #\z) (char-range #\0 #\9))))
              (token-ID lexeme)) 
@@ -229,6 +232,7 @@
               ((PASS) (pass-stmt))
               ((BREAK) (break-stmt))
               ((CONTINUE) (continue-stmt))
+              ((PRINT OPEN-PARENTHESIS Arguments CLOSE-PARENTHESIS) (print-stmt $3))
               )
              (Compound-stmt
               ((Function-def) (a-function-def $1))
