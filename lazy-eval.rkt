@@ -437,9 +437,6 @@
    (env environment?)
    )
   )
-
-;TODO for ro intori zadam ke moteghayyere tooye for biroonesham hast! in ghalate? kollan bayad scope bandi raayat beshe?
-;TODO too tabe oke scope esh jodae chon too ghesmate value-of-exp e seda zadanesh vali inja na
             
 (define (run-if if-st env)
   (cases if-stmt if-st
@@ -480,5 +477,5 @@
     (an-assignment (id exp) (let ([val (value-of-exp exp env)])
                               (result (set-var id val env) #f #f #f (non-val))))))
 
-;**** use evaluate.rkt for testing
+;**** Use evaluate.rkt for testing
 
