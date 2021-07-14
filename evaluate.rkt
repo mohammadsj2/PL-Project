@@ -1,7 +1,7 @@
 #lang racket
 
 (require (file "file_reader.rkt"))
-(require (file "translator.rkt"))
+(require (file "lazy-eval.rkt"))
 (require (lib "eopl.ss" "eopl"))
 (require (file "parser.rkt"))
 

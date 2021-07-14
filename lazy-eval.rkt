@@ -399,7 +399,7 @@
                        ((null? params2) saved-env)
                        (else (cases param-with-default (car params2)
                                (a-param (id exp)
-                                        (let ([val (value-of-exp exp env)])
+                                        (let ([val (a-thunk exp env)])
                                           (extend-env id (newref val) (extend-env-with-param-with-default (cdr params2) saved-env)))))))))])
         (begin
           (setref func-var-ref (proc-val proc))
@@ -483,7 +483,7 @@
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
 ;If you want to run code directly
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(a=10): return 1;; print(f(g(20)));")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(a=g(10)): return 1;; print(f());")))
 
 ;(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
 (let ((parser-res (simple-math-parser my-lexer)))
