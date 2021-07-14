@@ -217,21 +217,20 @@
     (with-param-function-call (primary1 args1)(if (is-print primary1)
                                                   (begin (print-values (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1)) ) (display "\n") (num-val -13))
                                                   (let ([proc (expval->proc (value-of-primary primary1 env))])
-                                                    (apply-procedure proc (map (lambda (exp) (value-of-exp exp env)) (arguments->list args1))))
+                                                    (apply-procedure proc (map (lambda (exp) (a-thunk exp env)) (arguments->list args1))))
                                                   )
       )
-                                               
     )
   )
 
 (define (print-value eval)
   (cases expval eval
-  (num-val (num) (display num))
-  (bool-val (bool) (display bool))
-  (list-val (list) (begin (display "[") (print-values list) (display "]")))
-  (proc-val (proc) (display proc))
+    (num-val (num) (display num))
+    (bool-val (bool) (display bool))
+    (list-val (list) (begin (display "[") (print-values list) (display "]")))
+    (proc-val (proc) (display proc))
   (non-val (display "None"))
-  )
+    )
   )
 
 (define (print-values expvals )
@@ -278,9 +277,23 @@
                   [val (cadar name-vals)])
               (extend-env name (newref val) (extend-env-with-argument (cdr name-vals) saved-env)))))))
 
+(define (value-of-thunk w)
+  (cases thunk w
+    (a-thunk (exp1 saved-env)
+             (value-of-exp exp1 saved-env)))
+  )
+
 (define (value-of-atom a env)
   (cases atom a
-    (an-id (id) (deref (apply-env env id)))
+    (an-id (id)
+           (let ((ref1 (apply-env env id)))
+             (let ((w (deref ref1)))
+               (if (expval? w)
+                   w
+                   (let ((val1 (value-of-thunk w)))
+                     (begin
+                       (setref ref1 val1)
+                       val1))))))
     (true-value () (bool-val #t))
     (false-value () (bool-val #f))
     (none-value () (non-val))
@@ -418,6 +431,13 @@
           [(null? lp) (result env3 #f #f #f (non-val))]
           [else (run-for-helper id lp stmts env3)]))))
 
+(define-datatype thunk thunk?
+  (a-thunk
+   (exp1 expression?)
+   (env environment?)
+   )
+  )
+
 ;TODO for ro intori zadam ke moteghayyere tooye for biroonesham hast! in ghalate? kollan bayad scope bandi raayat beshe?
 ;TODO too tabe oke scope esh jodae chon too ghesmate value-of-exp e seda zadanesh vali inja na
             
@@ -463,9 +483,9 @@
 ;Test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
 ;If you want to run code directly
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f():print(10);; a=10; print(f()); print(a, a, [a, a]); print([True]);")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(a=10): return 1;; print(f(g(20)));")))
 
 ;(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
-;(let ((parser-res (simple-math-parser my-lexer)))
-;  parser-res
-;  (run-program parser-res (empty-env)))
+(let ((parser-res (simple-math-parser my-lexer)))
+  parser-res
+  (run-program parser-res (empty-env)))
