@@ -16,4 +16,4 @@
     )
   )
 
-(evaluate "program.txt")
+(evaluate "Tests/program2.txt")

@@ -189,7 +189,7 @@
                         (else 'error))))
     (div-term (t f) (let ([val1 (expval->num (value-of-term t env))]
                           [val2 (expval->num (value-of-factor f env))])
-                      (num-val (/ val1 val2))))
+                      (num-val (exact->inexact (/ val1 val2)))))
     (a-factor (f) (value-of-factor f env))))
 
 (define (value-of-factor f env)
@@ -480,12 +480,5 @@
     (an-assignment (id exp) (let ([val (value-of-exp exp env)])
                               (result (set-var id val env) #f #f #f (non-val))))))
 
-;Test
-(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-;If you want to run code directly
-(define my-lexer (lex-this simple-math-lexer (open-input-string "def f(a=g(10)): return 1;; print(f());")))
+;**** use evaluate.rkt for testing
 
-;(define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file "program.txt"))))
-(let ((parser-res (simple-math-parser my-lexer)))
-  parser-res
-  (run-program parser-res (empty-env)))
