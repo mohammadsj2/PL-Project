@@ -74,24 +74,12 @@
   (extend-env
    (var string?)
    (val refrence?)
-   (env environment?))
-  (extend-env-proc
-   (proc-name string?)
-   (params1 (list-of string?))
-   (body statements?)
-   (saved-env environment?)))
+   (env environment?)))
 
 (define (apply-env env search-var)
   (cases environment env
     (empty-env () 'not-found)
-    (extend-env (var val env2) (if (equal? var search-var) val (apply-env env2 search-var)))
-    (extend-env-proc (proc-name params1 body saved-env)
-                     (if (equal? proc-name search-var)
-                         (procedure
-                          params1
-                          body
-                          saved-env)
-                         (apply-env saved-env search-var)))))
+    (extend-env (var val env2) (if (equal? var search-var) val (apply-env env2 search-var)))))
 
 (define (value-of-exp exp env)
   (cases expression exp
@@ -229,7 +217,7 @@
     (bool-val (bool) (display bool))
     (list-val (list) (begin (display "[") (print-values list) (display "]")))
     (proc-val (proc) (display proc))
-  (non-val (display "None"))
+    (non-val (display "None"))
     )
   )
 
@@ -247,14 +235,14 @@
 
 (define (is-print p)
   (cases primary p
-     (an-atom (atom1)
-              (cases atom atom1
-                (an-id (id)
-                       (if (equal? id "print") #t #f))
-                (else
-                 #f
-                 )))
-     (else #f)))
+    (an-atom (atom1)
+             (cases atom atom1
+               (an-id (id)
+                      (if (equal? id "print") #t #f))
+               (else
+                #f
+                )))
+    (else #f)))
 
 (define (arguments->list args1)
   (cases arguments args1
@@ -363,24 +351,6 @@
 
 (define (create-procedure id params1 stmts env)
   (result (extend-env-with-procedure-new id params1 stmts env) #f #f #f (non-val)))
-
-(define (extend-env-with-procedure id params1 stmts env)
-  (extend-env-proc
-   id
-   (map
-    (lambda (p)
-      (cases param-with-default p
-        (a-param (id exp) id)))
-    params1)
-   stmts
-   (let extend-env-with-param-with-default ([params2 params1]
-                                            [saved-env env])
-     (cond
-       ((null? params2) saved-env)
-       (else (cases param-with-default (car params2)
-               (a-param (id exp)
-                        (let ([val (value-of-exp exp env)])
-                          (extend-env id (newref val) (extend-env-with-param-with-default (cdr params2) saved-env))))))))))
 
 (define (extend-env-with-procedure-new id params1 stmts env)
   (let ([func-var-ref (newref (non-val))])
