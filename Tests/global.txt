@@ -1,10 +1,9 @@
 def f():
-return 1;;
+	return 1;;
 
 def g(x=100):
-global f;
-return x + f();
-;
+	global f;
+	return x + f();;
 
 print(g(10));
 

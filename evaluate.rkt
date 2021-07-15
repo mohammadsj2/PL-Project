@@ -19,4 +19,4 @@
 
 ;(evaluate "Tests/program1.txt")
 ;(evaluate "Tests/program2.txt")
-(define ev (evaluate "Tests/global.txt"))
+(define ev (evaluate "Tests/print_primes.txt"))

@@ -327,6 +327,7 @@
 (define (run-program p env)
   (cases program p
     (a-program (stmts) (run-stmts stmts (begin
+                                          (initialize-store!)
                                           (set! the-global-env (global-env env))
                                           the-global-env)))))
 
