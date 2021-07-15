@@ -8,6 +8,7 @@
 
 (define (evaluate addr)
   (begin
+    (displayln (string-append "Evaluating: " addr))
     (define lex-this (lambda (lexer input) (lambda () (lexer input))))
     (define my-lexer (lex-this simple-math-lexer (open-input-string (read-instructions-from-file addr))))
     (let ((parser-res (simple-math-parser my-lexer)))
@@ -16,4 +17,5 @@
     )
   )
 
+(evaluate "Tests/program1.txt")
 (evaluate "Tests/program2.txt")
