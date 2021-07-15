@@ -1,0 +1,42 @@
+n=40;
+
+def range(l=0,r=10,step=1):
+	if l>r or l==r:
+		return [];
+	else: 
+		return [l]+range(l+step,r,step);
+	;
+;
+
+def set(id=0,val=True):
+	global mark;
+	global range;
+	global n;
+	mark2=[];
+	for i in range(0,n+2,1):
+		if id==i:
+			mark2=mark2+[val];
+		else:
+			mark2=mark2+[mark[i]];
+		;
+	;
+	mark=mark2;
+;
+
+mark=[];
+for i in range(0,n+2,1):
+	mark=mark+[False];
+;
+
+for i in range(2,n,1):
+	if mark[i]:
+		pass;
+		continue;
+	else:
+		print(i);
+		for j in range(2*i,n,i):
+			tmp=set(j,True or mark[j]);
+		;
+	;
+;
+	

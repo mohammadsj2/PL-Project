@@ -1,0 +1,13 @@
+def f():
+	global g;
+	return 1+g(10);;
+
+def g(x=100):
+	h=2*x;
+	if x==0:
+		return 0;
+	else:
+		return h + g(x-1);
+;;
+
+print(g(10));
