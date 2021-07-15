@@ -7,6 +7,8 @@
 
 ; Value of Expressions
 
+(define the-global-env null)
+
 (define (empty-store) '())
 
 (define the-store (empty-store))
@@ -71,15 +73,26 @@
 
 (define-datatype environment environment?
   (empty-env)
-  (extend-env
+  (extended-env
    (var string?)
    (val refrence?)
-   (env environment?)))
+   (env environment?))
+  (global-env
+   (wrapped-env environment?)))
 
 (define (apply-env env search-var)
   (cases environment env
     (empty-env () 'not-found)
-    (extend-env (var val env2) (if (equal? var search-var) val (apply-env env2 search-var)))))
+    (extended-env (var val env2) (if (equal? var search-var) val (apply-env env2 search-var)))
+    (global-env (wrapped-env) (apply-env wrapped-env search-var))))
+
+(define (extend-env var val env)
+  (cases environment env
+    (global-env (wrapped-env) (let ([new-global-env (global-env (extend-env var val wrapped-env))])
+                                (begin
+                                  (set! the-global-env new-global-env)
+                                  new-global-env)))
+    (else (extended-env var val env))))
 
 (define (value-of-exp exp env)
   (cases expression exp
@@ -313,7 +326,9 @@
 
 (define (run-program p env)
   (cases program p
-    (a-program (stmts) (run-stmts stmts env))))
+    (a-program (stmts) (run-stmts stmts (begin
+                                          (set! the-global-env (global-env env))
+                                          the-global-env)))))
 
 (define (is-stop? out)
   (or (result-break-flag out) (result-continue-flag out) (result-return-flag out)))
@@ -350,9 +365,9 @@
     (multiple-params (params1 param1) (append (params->list params1) (list param1)))))
 
 (define (create-procedure id params1 stmts env)
-  (result (extend-env-with-procedure-new id params1 stmts env) #f #f #f (non-val)))
+  (result (extend-env-with-procedure id params1 stmts env) #f #f #f (non-val)))
 
-(define (extend-env-with-procedure-new id params1 stmts env)
+(define (extend-env-with-procedure id params1 stmts env)
   (let ([func-var-ref (newref (non-val))])
         
     (let ([new-env (extend-env id func-var-ref env)])
@@ -364,7 +379,7 @@
                     params1)
                    stmts
                    (let extend-env-with-param-with-default ([params2 params1]
-                                                            [saved-env new-env])
+                                                            [saved-env (extend-env id func-var-ref (empty-env))])
                      (cond
                        ((null? params2) saved-env)
                        (else (cases param-with-default (car params2)
@@ -421,7 +436,7 @@
   (cases simple-stmt stmt
     (an-assignment-stmt (a) (run-assignment-stmt a env))
     (a-return-stmt (r) (run-return r env))
-    (a-global-stmt (g) (result env #f #f #f (non-val))) ;TODO function phase
+    (a-global-stmt (g) (run-global g env))
     (pass-stmt () (result env #f #f #f (non-val)))
     (break-stmt () (result env #t #f #f (non-val)))
     (continue-stmt () (result env #f #t #f (non-val)))
@@ -446,6 +461,12 @@
   (cases assignment a
     (an-assignment (id exp) (let ([val (value-of-exp exp env)])
                               (result (set-var id val env) #f #f #f (non-val))))))
+
+(define (run-global g env)
+  (cases environment env
+    (global-env (wrapped-env) (result env #f #f #f (non-val))) ; If it is the global scope, do nothing.
+    (else (cases global-stmt g
+            (a-global (id) (result (extend-env id (apply-env the-global-env id) env) #f #f #f (non-val)))))))
 
 ;**** Use evaluate.rkt for testing
 
