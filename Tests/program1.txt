@@ -1,0 +1,25 @@
+def g(): 
+   return 1;
+   ;
+
+def f(x=10):
+    if x==1 or x==0:
+        global g;
+        return g();
+    else: 
+        return f(x-1) + f(x-2);
+    ;
+    ;
+
+a = f(10);
+print(a);
+
+print(10<20>30);
+
+print(2**4 * 3 + 6 - 10);
+
+def f(a=g(10)):
+    return 1;
+    ;
+
+print(f());
