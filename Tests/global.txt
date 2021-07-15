@@ -1,0 +1,17 @@
+def f():
+return 1;;
+
+def g(x=100):
+global f;
+return x + f();
+;
+
+print(g(10));
+
+a = [10, 20, f];
+
+b = a[2]();
+
+print(b);
+
+print(a[0] + a[1]);
