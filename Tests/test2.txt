@@ -1,0 +1,17 @@
+for i in [1, 2, 3, 4]:
+    print(i);
+    pass;
+    print(False);
+;
+
+for i in [1, 2, 3, 4]:
+    print(i);
+    break;
+    print(False);
+;
+
+for i in [1, 2] + [3, 4]:
+    print(i);
+    continue;
+    print(False);
+;

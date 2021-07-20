@@ -413,7 +413,7 @@
                [env3 (result-new-env out)])
         (cond
           [(result-return-flag out) (result env3 #f #f #t (result-return-val out))]
-          [(result-break-flag out) out]
+          [(result-break-flag out) (result env3 #f #f #f (non-val))]
           [(null? lp) (result env3 #f #f #f (non-val))]
           [else (run-for-helper id lp stmts env3)]))))
 
